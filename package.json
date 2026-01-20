@@ -1,0 +1,92 @@
+{
+  "name": "vscode-taskexplorer",
+  "displayName": "Task Explorer",
+  "description": "Show and run VS Code tasks in the sidebar.",
+  "version": "0.0.1",
+  "publisher": "carlocardella",
+  "preview": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carlocardella/vscode-taskexplorer"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:taskExplorerView",
+    "onCommand:taskExplorer.refresh",
+    "onCommand:taskExplorer.openTask"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "taskExplorer",
+          "title": "Task Explorer",
+          "icon": "media/task.svg"
+        }
+      ]
+    },
+    "views": {
+      "taskExplorer": [
+        {
+          "id": "taskExplorerView",
+          "name": "Tasks",
+          "icon": "media/task.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "taskExplorer.refresh",
+        "title": "Task Explorer: Refresh"
+      },
+      {
+        "command": "taskExplorer.openTask",
+        "title": "Task Explorer: Open Task"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "taskExplorer.refresh",
+          "when": "view == taskExplorerView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "taskExplorer.openTask",
+          "when": "view == taskExplorerView",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js",
+    "test": "npm run compile && npm run test:compile && node ./out/test/runTest.js",
+    "test:compile": "tsc -p ./tsconfig.tests.json",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.5",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.8",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "vsce": "^2.15.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
