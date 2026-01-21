@@ -2,16 +2,6 @@
 
 All notable changes to the "Task Explorer" extension will be documented in this file.
 
-## [0.0.2] - 2026-01-20
-
-### Added
-- Group tasks by type (npm, shell, PowerShell, etc.) in the sidebar
-- Inline hover actions to run/stop tasks and open tasks.json for editing
-- Running-state tracking so the run button becomes a stop button while executing
-- Custom extension logos with colorful checklist design and spinning repo-sync arrows
-- Task type-specific icons for individual tasks (npm, PowerShell, Python, Docker, etc.)
-- Monochrome outline logo for the activity bar that adapts to VS Code themes
-
 ## [0.0.1] - 2026-01-19
 
 ### Added
@@ -21,3 +11,9 @@ All notable changes to the "Task Explorer" extension will be documented in this 
 - Command to run selected tasks
 - Webpack bundling for optimized extension size
 - Basic test harness with @vscode/test-electron
+- Group tasks by type (npm, shell, PowerShell, etc.) in the sidebar
+- Inline hover actions to run/stop tasks and open tasks.json for editing
+- Running-state tracking so the run button becomes a stop button while executing
+- Custom extension logos with colorful checklist design and spinning repo-sync arrows
+- Task type-specific icons for individual tasks (npm, PowerShell, Python, Docker, etc.)
+- Monochrome outline logo for the activity bar that adapts to VS Code themes
