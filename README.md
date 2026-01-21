@@ -1,6 +1,28 @@
 # Task Explorer (Preview)
 
+<!-- ![.github/workflows/BuildAndPublish.yml](https://github.com/carlocardella/vscode-tasker/workflows/.github/workflows/BuildAndPublish.yml/badge.svg?branch=master) -->
+![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/carlocardella.vscode-tasker)
+![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/carlocardella.vscode-tasker)
+![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/carlocardella.vscode-tasker)
+![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/carlocardella.vscode-tasker)
+[![GitHub issues](https://img.shields.io/github/issues/carlocardella/vscode-tasker.svg)](https://github.com/carlocardella/vscode-tasker/issues)
+[![GitHub license](https://img.shields.io/github/license/carlocardella/vscode-tasker.svg)](https://github.com/carlocardella/vscode-tasker/blob/master/LICENSE)
+<!-- [![Twitter](https://img.shields.io/twitter/url/https/github.com/carlocardella/vscode-tasker.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2Fcarlocardella%2Fvscode-tasker) -->
+<!-- [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/carlocardella/vscode-tasker) -->
+
+[Download for VS Code](https://marketplace.visualstudio.com/items?itemName=carlocardella.vscode-tasker)
+
+<!-- [Download for VS Codium](https://open-vsx.org/extension/carlocardella/vscode-tasker) -->
+
+<div align="left">
+  <img src="media/task-checklist-arrow.png" alt="VSCode Auto Git Extension Icon" width="96" height="96" style="float:left; margin-right: 1em; margin-bottom: 1em;" />
+</div>
+
+
 Task Explorer is a VS Code extension that surfaces your defined tasks in a dedicated sidebar view so you can browse and run them quickly.
+
+<br>
+<br>
 
 ## Features
 - Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
