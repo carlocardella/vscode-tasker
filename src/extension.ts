@@ -15,10 +15,34 @@ class TaskGroupItem extends vscode.TreeItem {
 }
 
 class TaskTreeItem extends vscode.TreeItem {
+  private static readonly TASK_TYPE_ICONS: Record<string, string> = {
+    'npm': 'npm',
+    'powershell': 'terminal-powershell',
+    'shell': 'terminal-bash',
+    'bash': 'terminal-bash',
+    'cargo': 'package',
+    'dotnet': 'dot-fill',
+    'gulp': 'package',
+    'gradle': 'package',
+    'jake': 'package',
+    'make': 'wrench',
+    'maven': 'package',
+    'python': 'python',
+    'ruby': 'ruby',
+    'go': 'globe',
+    'docker': 'docker',
+    'other': 'checklist'
+  };
+
   constructor(public readonly task: vscode.Task, isRunning: boolean = false) {
     super(task.name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = isRunning ? 'taskExplorer.task.running' : 'taskExplorer.task';
-    this.iconPath = new vscode.ThemeIcon('checklist');
+    
+    // Get task type and find appropriate icon
+    const taskType = task.definition?.type || 'other';
+    const iconName = TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'checklist';
+    this.iconPath = new vscode.ThemeIcon(iconName);
+    
     this.tooltip = task.name;
   }
 }
