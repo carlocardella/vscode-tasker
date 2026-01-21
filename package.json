@@ -27,7 +27,7 @@
         {
           "id": "taskExplorer",
           "title": "Task Explorer",
-          "icon": "media/task.svg"
+          "icon": "media/task-checklist-arrow-outline.svg"
         }
       ]
     },
@@ -36,7 +36,7 @@
         {
           "id": "taskExplorerView",
           "name": "Tasks",
-          "icon": "media/task.svg"
+          "icon": "media/task-checklist-arrow.svg"
         }
       ]
     },
