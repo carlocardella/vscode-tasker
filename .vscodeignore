@@ -1,9 +1,25 @@
-node_modules
-.vscode
-.vscode-test
-out/test
-src
+# Development dependencies and build files
+node_modules/
+.vscode/
+.vscode-test/
+out/
+src/
 **/*.map
 tsconfig*.json
 webpack.config.js
-.git
+.git/
+.gitignore
+
+# Testing
+.mocha*
+test/
+
+# Config
+package-lock.json
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# Other
+*.vsix
+.env*

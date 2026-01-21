@@ -3,8 +3,9 @@
 Task Explorer is a VS Code extension that surfaces your defined tasks in a dedicated sidebar view so you can browse and run them quickly.
 
 ## Features
-- Sidebar view showing available VS Code tasks
-- Command palette actions to refresh the list and run a task
+- Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
+- Inline hover actions on each task: run/stop (state-aware) and edit (opens tasks.json)
+- Command palette actions to refresh the list and run/stop/edit a task
 - Bundled with webpack for fast activation and small packages
 
 ## Getting Started
@@ -24,7 +25,11 @@ npm run compile
 
 ## Commands & Views
 - View: Task Explorer (Activity Bar)
-- Commands: Task Explorer: Refresh, Task Explorer: Open Task
+- Commands:
+	- Task Explorer: Refresh
+	- Task Explorer: Run Task (shows as a run button when stopped)
+	- Task Explorer: Stop Task (shows as a stop button when running)
+	- Task Explorer: Edit Task (opens .vscode/tasks.json)
 
 ## Testing
 ```

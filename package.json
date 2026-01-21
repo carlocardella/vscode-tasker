@@ -43,11 +43,23 @@
     "commands": [
       {
         "command": "taskExplorer.refresh",
-        "title": "Task Explorer: Refresh"
+        "title": "Refresh",
+        "icon": "$(refresh)"
       },
       {
-        "command": "taskExplorer.openTask",
-        "title": "Task Explorer: Open Task"
+        "command": "taskExplorer.runTask",
+        "title": "Run Task",
+        "icon": "$(run)"
+      },
+      {
+        "command": "taskExplorer.stopTask",
+        "title": "Stop Task",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "taskExplorer.editTask",
+        "title": "Edit Task",
+        "icon": "$(edit)"
       }
     ],
     "menus": {
@@ -60,9 +72,19 @@
       ],
       "view/item/context": [
         {
-          "command": "taskExplorer.openTask",
-          "when": "view == taskExplorerView",
-          "group": "inline"
+          "command": "taskExplorer.runTask",
+          "when": "view == taskExplorerView && viewItem == taskExplorer.task",
+          "group": "inline@1"
+        },
+        {
+          "command": "taskExplorer.stopTask",
+          "when": "view == taskExplorerView && viewItem == taskExplorer.task.running",
+          "group": "inline@1"
+        },
+        {
+          "command": "taskExplorer.editTask",
+          "when": "view == taskExplorerView && viewItem =~ /taskExplorer\\.task/",
+          "group": "inline@2"
         }
       ]
     }
