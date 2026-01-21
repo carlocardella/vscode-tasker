@@ -1,19 +1,33 @@
 {
   "name": "vscode-taskexplorer",
   "displayName": "Task Explorer",
-  "description": "Show and run VS Code tasks in the sidebar.",
+  "description": "Show and run VS Code tasks in the sidebar",
   "version": "0.0.1",
+  "license": "MIT",
+  "homepage": "https://cloudnotes.io",
   "publisher": "carlocardella",
   "preview": true,
+  "author": {
+    "name": "Carlo Cardella",
+    "url": "https://cloudnotes.io"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/carlocardella/vscode-taskexplorer"
+  },
+  "bugs": {
+    "url": "https://github.com/carlocardella/vscode-taskexplorer/issues"
   },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "vscode",
+    "tasks",
+    "automation"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [

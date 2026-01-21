@@ -1,6 +1,13 @@
 # Task Explorer (Preview)
 
+<div align="left">
+  <img src="media/task-checklist-arrow.svg" alt="VSCode Auto Git Extension Icon" width="96" height="96" style="float:left; margin-right: 1em; margin-bottom: 1em;" />
+</div>
+
 Task Explorer is a VS Code extension that surfaces your defined tasks in a dedicated sidebar view so you can browse and run them quickly.
+
+<br>
+<br>
 
 ## Features
 - Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
@@ -42,3 +49,7 @@ Runs a minimal test suite via @vscode/test-electron.
 npm run package
 ```
 Produces a .vsix using the webpack bundle.
+
+## Credits
+
+I, as many, have been using the excellent [Task Explorer](https://marketplace.visualstudio.com/items?itemName=spmeesseman.vscode-taskexplorer) by Scott Meesseman but unfortunately the extension recently stopped working (independently from the switch to trial/paid version), so I decided to fill the gap with this small exercise, born more for my own convenience that I hope will also help someone else out there.
