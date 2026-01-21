@@ -1,6 +1,6 @@
 {
-  "name": "tasker",
-  "displayName": "Tasker",
+  "name": "vscode-tasker",
+  "displayName": "Tasker for VSCode",
   "description": "Run VS Code tasks quickly from a sidebar view, organized by type",
   "version": "0.0.1",
   "license": "MIT",
