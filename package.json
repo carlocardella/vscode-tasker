@@ -31,25 +31,25 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onView:taskExplorerView",
-    "onCommand:taskExplorer.refresh",
-    "onCommand:taskExplorer.openTask"
+    "onView:taskerView",
+    "onCommand:tasker.refresh",
+    "onCommand:tasker.openTask"
   ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "taskExplorer",
-          "title": "Task Explorer",
+          "id": "tasker",
+          "title": "Tasker",
           "icon": "media/task-checklist-arrow-outline.svg"
         }
       ]
     },
     "views": {
-      "taskExplorer": [
+      "tasker": [
         {
-          "id": "taskExplorerView",
-          "name": "Tasks",
+          "id": "taskerView",
+          "name": "Tasker",
           "icon": "media/task-checklist-arrow.svg"
         }
       ]
@@ -61,17 +61,17 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "taskExplorer.runTask",
+        "command": "tasker.runTask",
         "title": "Run Task",
         "icon": "$(run)"
       },
       {
-        "command": "taskExplorer.stopTask",
+        "command": "tasker.stopTask",
         "title": "Stop Task",
         "icon": "$(stop)"
       },
       {
-        "command": "taskExplorer.editTask",
+        "command": "tasker.editTask",
         "title": "Edit Task",
         "icon": "$(edit)"
       }
@@ -79,25 +79,25 @@
     "menus": {
       "view/title": [
         {
-          "command": "taskExplorer.refresh",
-          "when": "view == taskExplorerView",
+          "command": "tasker.refresh",
+          "when": "view == taskerView",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "taskExplorer.runTask",
-          "when": "view == taskExplorerView && viewItem == taskExplorer.task",
+          "command": "tasker.runTask",
+          "when": "view == taskerView && viewItem == tasker.task",
           "group": "inline@1"
         },
         {
-          "command": "taskExplorer.stopTask",
-          "when": "view == taskExplorerView && viewItem == taskExplorer.task.running",
+          "command": "tasker.stopTask",
+          "when": "view == taskerView && viewItem == tasker.task.running",
           "group": "inline@1"
         },
         {
-          "command": "taskExplorer.editTask",
-          "when": "view == taskExplorerView && viewItem =~ /taskExplorer\\.task/",
+          "command": "tasker.editTask",
+          "when": "view == taskerView && viewItem =~ /tasker\\.task/",
           "group": "inline@2"
         }
       ]

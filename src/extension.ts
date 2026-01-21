@@ -8,7 +8,7 @@ class TaskGroupItem extends vscode.TreeItem {
     public readonly tasks: vscode.Task[]
   ) {
     super(taskType, vscode.TreeItemCollapsibleState.Expanded);
-    this.contextValue = 'taskExplorer.group';
+    this.contextValue = 'tasker.group';
     this.description = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
     this.iconPath = new vscode.ThemeIcon('folder');
   }
@@ -36,7 +36,7 @@ class TaskTreeItem extends vscode.TreeItem {
 
   constructor(public readonly task: vscode.Task, isRunning: boolean = false) {
     super(task.name, vscode.TreeItemCollapsibleState.None);
-    this.contextValue = isRunning ? 'taskExplorer.task.running' : 'taskExplorer.task';
+    this.contextValue = isRunning ? 'tasker.task.running' : 'tasker.task';
     
     // Get task type and find appropriate icon
     const taskType = task.definition?.type || 'other';
@@ -47,7 +47,7 @@ class TaskTreeItem extends vscode.TreeItem {
   }
 }
 
-class TaskExplorerProvider implements vscode.TreeDataProvider<TreeNode> {
+class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private runningTasks = new Set<string>();
@@ -76,7 +76,7 @@ class TaskExplorerProvider implements vscode.TreeDataProvider<TreeNode> {
 
   getTreeItem(element: TreeNode): vscode.TreeItem {
     if (element instanceof TaskTreeItem) {
-      element.contextValue = this.isTaskRunning(element.task) ? 'taskExplorer.task.running' : 'taskExplorer.task';
+      element.contextValue = this.isTaskRunning(element.task) ? 'tasker.task.running' : 'tasker.task';
     }
     return element;
   }
@@ -117,13 +117,13 @@ class TaskExplorerProvider implements vscode.TreeDataProvider<TreeNode> {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const provider = new TaskExplorerProvider();
+  const provider = new TaskerProvider();
   let executionMap = new Map<vscode.TaskExecution, vscode.Task>();
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('taskExplorerView', provider),
-    vscode.commands.registerCommand('taskExplorer.refresh', () => provider.refresh()),
-    vscode.commands.registerCommand('taskExplorer.runTask', async (item: TaskTreeItem) => {
+    vscode.window.registerTreeDataProvider('taskerView', provider),
+    vscode.commands.registerCommand('tasker.refresh', () => provider.refresh()),
+    vscode.commands.registerCommand('tasker.runTask', async (item: TaskTreeItem) => {
       try {
         const execution = await vscode.tasks.executeTask(item.task);
         provider.markTaskRunning(item.task);
@@ -133,7 +133,7 @@ export function activate(context: vscode.ExtensionContext): void {
         void vscode.window.showErrorMessage(`Failed to start task: ${message}`);
       }
     }),
-    vscode.commands.registerCommand('taskExplorer.stopTask', async (item: TaskTreeItem) => {
+    vscode.commands.registerCommand('tasker.stopTask', async (item: TaskTreeItem) => {
       try {
         for (const [execution, task] of executionMap.entries()) {
           if (task === item.task) {
@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext): void {
         void vscode.window.showErrorMessage(`Failed to stop task: ${message}`);
       }
     }),
-    vscode.commands.registerCommand('taskExplorer.editTask', async (_item: TaskTreeItem) => {
+    vscode.commands.registerCommand('tasker.editTask', async (_item: TaskTreeItem) => {
       // Open tasks.json for editing
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -188,4 +188,4 @@ export function deactivate(): void {
 }
 
 // Export classes for testing
-export { TaskGroupItem, TaskTreeItem, TaskExplorerProvider };
+export { TaskGroupItem, TaskTreeItem, TaskerProvider };

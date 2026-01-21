@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
-import { TaskGroupItem, TaskTreeItem, TaskExplorerProvider } from '../../extension';
+import { TaskGroupItem, TaskTreeItem, TaskerProvider } from '../../extension';
 
 suite('Extension Test Suite', () => {
   vscode.window.showInformationMessage('Start all tests.');
@@ -54,7 +54,7 @@ suite('Extension Test Suite', () => {
 
     test('Has correct icon and context value', () => {
       const group = new TaskGroupItem('npm', []);
-      assert.strictEqual(group.contextValue, 'taskExplorer.group', 'Should have group context value');
+      assert.strictEqual(group.contextValue, 'tasker.group', 'Should have group context value');
       assert.ok(group.iconPath, 'Should have icon path');
     });
 
@@ -75,7 +75,7 @@ suite('Extension Test Suite', () => {
       );
 
       const item = new TaskTreeItem(task, false);
-      assert.strictEqual(item.contextValue, 'taskExplorer.task', 'Should have task context value');
+      assert.strictEqual(item.contextValue, 'tasker.task', 'Should have task context value');
     });
 
     test('Creates item with correct context value when running', () => {
@@ -88,7 +88,7 @@ suite('Extension Test Suite', () => {
       );
 
       const item = new TaskTreeItem(task, true);
-      assert.strictEqual(item.contextValue, 'taskExplorer.task.running', 'Should have running context value');
+      assert.strictEqual(item.contextValue, 'tasker.task.running', 'Should have running context value');
     });
 
     test('Has correct icon and tooltip', () => {
@@ -119,9 +119,9 @@ suite('Extension Test Suite', () => {
     });
   });
 
-  suite('TaskExplorerProvider', () => {
+  suite('TaskerProvider', () => {
     test('Initializes with no running tasks', () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       
       const task = new vscode.Task(
         { type: 'npm' },
@@ -135,7 +135,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('Tracks task running state', () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       const task = new vscode.Task(
         { type: 'npm' },
         vscode.TaskScope.Workspace,
@@ -154,7 +154,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('Tracks multiple tasks independently', () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       
       const task1 = new vscode.Task(
         { type: 'npm' },
@@ -187,10 +187,10 @@ suite('Extension Test Suite', () => {
     });
 
     test('Provides onDidChangeTreeData event', () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       
       let eventFired = false;
-      provider.onDidChangeTreeData((_) => {
+      provider.onDidChangeTreeData((_: any) => {
         eventFired = true;
       });
       
@@ -199,7 +199,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('Returns tree item from getTreeItem', () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       const task = new vscode.Task(
         { type: 'npm' },
         vscode.TaskScope.Workspace,
@@ -215,7 +215,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('Returns empty children for root when no tasks', async () => {
-      const provider = new TaskExplorerProvider();
+      const provider = new TaskerProvider();
       const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([]);
       
       try {
