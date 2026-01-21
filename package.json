@@ -50,13 +50,14 @@
         {
           "id": "taskerView",
           "name": "Tasker",
-          "icon": "media/task-checklist-arrow.svg"
+          "icon": "media/task-checklist-arrow.svg",
+          "visibility": "visible"
         }
       ]
     },
     "commands": [
       {
-        "command": "taskExplorer.refresh",
+        "command": "tasker.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
