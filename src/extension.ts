@@ -162,3 +162,6 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {
   // nothing to clean up yet
 }
+
+// Export classes for testing
+export { TaskGroupItem, TaskTreeItem, TaskExplorerProvider };
