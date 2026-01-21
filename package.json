@@ -1,7 +1,7 @@
 {
-  "name": "vscode-taskexplorer",
-  "displayName": "Task Explorer",
-  "description": "Show and run VS Code tasks in the sidebar",
+  "name": "tasker",
+  "displayName": "Tasker",
+  "description": "Run VS Code tasks quickly from a sidebar view, organized by type",
   "version": "0.0.1",
   "license": "MIT",
   "homepage": "https://cloudnotes.io",
@@ -13,10 +13,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/carlocardella/vscode-taskexplorer"
+    "url": "https://github.com/carlocardella/vscode-tasker"
   },
   "bugs": {
-    "url": "https://github.com/carlocardella/vscode-taskexplorer/issues"
+    "url": "https://github.com/carlocardella/vscode-tasker/issues"
   },
   "engines": {
     "vscode": "^1.85.0"

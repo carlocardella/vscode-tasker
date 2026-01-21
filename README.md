@@ -1,13 +1,6 @@
 # Task Explorer (Preview)
 
-<div align="left">
-  <img src="media/task-checklist-arrow.svg" alt="VSCode Auto Git Extension Icon" width="96" height="96" style="float:left; margin-right: 1em; margin-bottom: 1em;" />
-</div>
-
 Task Explorer is a VS Code extension that surfaces your defined tasks in a dedicated sidebar view so you can browse and run them quickly.
-
-<br>
-<br>
 
 ## Features
 - Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
