@@ -2,6 +2,26 @@
 
 All notable changes to the "Task Explorer" extension will be documented in this file.
 
+## [0.0.2] - 2026-01-21
+
+### Added
+- Comprehensive test suite with 26 passing tests covering all major components
+- Smart edit functionality that opens tasks at their correct file locations:
+  - npm scripts open in package.json
+  - gulp tasks open in gulpfile.js (supports .js, .ts, .babel.js)
+  - grunt tasks open in Gruntfile.js (.js or .coffee)
+  - shell/process tasks open the referenced script files
+  - Other tasks open in tasks.json
+- Error handling and fallback mechanism for icon rendering to prevent tree display failures
+
+### Fixed
+- Task type icons now display correctly using only verified VS Code Codicons (package, terminal-bash, terminal-powershell, wrench, server, gear, ruby)
+- Removed invalid Codicon names that were causing silent rendering failures
+- Added try-catch error handling for icon creation with safe 'package' icon fallback
+- TypeScript compilation configuration for test suite (added skipLibCheck to tsconfig.tests.json)
+- Extension identifier reference in test suite (updated to carlocardella.vscode-tasker)
+- Cursor positioning in edit task command now points to exact task definitions in source files
+
 ## [0.0.1] - 2026-01-19
 
 ### Added

@@ -16,30 +16,26 @@ class TaskGroupItem extends vscode.TreeItem {
 
 class TaskTreeItem extends vscode.TreeItem {
   private static readonly TASK_TYPE_ICONS: Record<string, string> = {
-    'npm': 'npm',
+    'npm': 'package',
     'powershell': 'terminal-powershell',
     'shell': 'terminal-bash',
     'bash': 'terminal-bash',
     'cargo': 'package',
-    'dotnet': 'symbol-module',
+    'dotnet': 'package',
     'gulp': 'package',
     'gradle': 'package',
     'jake': 'package',
+    'grunt': 'package',
     'make': 'wrench',
     'maven': 'package',
-    'python': 'python',
-    'ruby': 'gem',
-    'go': 'symbol-package',
-    'docker': 'docker',
-    'typescript': 'bracket-square',
+    'python': 'package',
+    'ruby': 'ruby',
+    'go': 'package',
+    'docker': 'server',
+    'typescript': 'package',
     'batch': 'terminal',
-    'java': 'symbol-class',
-    'perl': 'code',
-    'php': 'symbol-method',
-    'csharp': 'symbol-interface',
-    'rust': 'package',
-    'swift': 'symbol-structure',
-    'other': 'checklist'
+    'java': 'package',
+    'process': 'gear'
   };
 
   constructor(public readonly task: vscode.Task, isRunning: boolean = false) {
@@ -48,8 +44,13 @@ class TaskTreeItem extends vscode.TreeItem {
     
     // Get task type and find appropriate icon
     const taskType = task.definition?.type || 'other';
-    const iconName = TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'checklist';
-    this.iconPath = new vscode.ThemeIcon(iconName);
+    const iconName = TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'package';
+    try {
+      this.iconPath = new vscode.ThemeIcon(iconName);
+    } catch (error) {
+      // If icon name is invalid, fall back to package icon
+      this.iconPath = new vscode.ThemeIcon('package');
+    }
     
     this.tooltip = task.name;
   }
@@ -156,16 +157,135 @@ export function activate(context: vscode.ExtensionContext): void {
         void vscode.window.showErrorMessage(`Failed to stop task: ${message}`);
       }
     }),
-    vscode.commands.registerCommand('tasker.editTask', async (_item: TaskTreeItem) => {
-      // Open tasks.json for editing
+    vscode.commands.registerCommand('tasker.editTask', async (item: TaskTreeItem) => {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
         vscode.window.showErrorMessage('No workspace folder open.');
         return;
       }
 
-      const tasksJsonPath = vscode.Uri.joinPath(workspaceFolders[0].uri, '.vscode', 'tasks.json');
-      await vscode.commands.executeCommand('vscode.open', tasksJsonPath);
+      const task = item.task;
+      const taskType = task.definition?.type;
+      const workspaceRoot = workspaceFolders[0].uri;
+
+      // Helper function to search for text and position cursor
+      const openFileAtPosition = async (filePath: vscode.Uri, searchPattern: RegExp): Promise<boolean> => {
+        try {
+          const document = await vscode.workspace.openTextDocument(filePath);
+          const text = document.getText();
+          const match = searchPattern.exec(text);
+          
+          if (match) {
+            const position = document.positionAt(match.index);
+            const editor = await vscode.window.showTextDocument(document);
+            editor.selection = new vscode.Selection(position, position);
+            editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+            return true;
+          }
+          
+          // If not found but file exists, just open it
+          await vscode.window.showTextDocument(document);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      };
+
+      // Check if task has custom config (indicates tasks.json definition)
+      const hasCustomConfig = task.problemMatchers && task.problemMatchers.length > 0;
+      
+      // Try tasks.json first for tasks with custom config
+      if (hasCustomConfig) {
+        const tasksJsonPath = vscode.Uri.joinPath(workspaceRoot, '.vscode', 'tasks.json');
+        let pattern: RegExp;
+        if (taskType === 'npm' && task.definition.script) {
+          pattern = new RegExp(`"script"\\s*:\\s*"${task.definition.script.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'g');
+        } else {
+          pattern = new RegExp(`"label"\\s*:\\s*"${task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'g');
+        }
+        
+        if (await openFileAtPosition(tasksJsonPath, pattern)) {
+          return;
+        }
+      }
+
+      // Handle different task types based on their source
+      switch (taskType) {
+        case 'npm': {
+          // Open package.json for npm scripts
+          const packageJsonPath = vscode.Uri.joinPath(workspaceRoot, 'package.json');
+          const scriptName = task.definition.script;
+          if (scriptName) {
+            const pattern = new RegExp(`"${scriptName}"\\s*:\\s*"`, 'g');
+            await openFileAtPosition(packageJsonPath, pattern);
+          }
+          break;
+        }
+
+        case 'gulp': {
+          // Try gulpfile.js, gulpfile.ts, gulpfile.babel.js
+          const gulpFiles = ['gulpfile.js', 'gulpfile.ts', 'gulpfile.babel.js'];
+          for (const filename of gulpFiles) {
+            const gulpPath = vscode.Uri.joinPath(workspaceRoot, filename);
+            const taskName = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(`gulp\\.task\\s*\\(\\s*['"\`]${taskName}['"\`]`, 'g');
+            if (await openFileAtPosition(gulpPath, pattern)) {
+              return;
+            }
+          }
+          break;
+        }
+
+        case 'grunt': {
+          // Try Gruntfile.js, Gruntfile.coffee
+          const gruntFiles = ['Gruntfile.js', 'Gruntfile.coffee'];
+          for (const filename of gruntFiles) {
+            const gruntPath = vscode.Uri.joinPath(workspaceRoot, filename);
+            const taskName = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(`['"\`]${taskName}['"\`]`, 'g');
+            if (await openFileAtPosition(gruntPath, pattern)) {
+              return;
+            }
+          }
+          break;
+        }
+
+        case 'typescript': {
+          // Open tsconfig.json
+          const tsconfigPath = vscode.Uri.joinPath(workspaceRoot, 'tsconfig.json');
+          await openFileAtPosition(tsconfigPath, /.*/);
+          break;
+        }
+
+        case 'shell':
+        case 'process': {
+          // For shell/process tasks, try to find referenced script files
+          const command = task.definition.command;
+          if (command && typeof command === 'string') {
+            // Extract potential file paths from the command
+            const fileMatch = command.match(/\.\/[\w/\-\.]+\.(?:sh|ps1|cmd|bat|py|rb|js|ts)/);
+            if (fileMatch) {
+              const scriptPath = vscode.Uri.joinPath(workspaceRoot, fileMatch[0]);
+              if (await openFileAtPosition(scriptPath, /.*/)) {
+                return;
+              }
+            }
+          }
+          
+          // Fall back to tasks.json
+          const tasksJsonPath = vscode.Uri.joinPath(workspaceRoot, '.vscode', 'tasks.json');
+          const pattern = new RegExp(`"label"\\s*:\\s*"${task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'g');
+          await openFileAtPosition(tasksJsonPath, pattern);
+          break;
+        }
+
+        default: {
+          // Default: try tasks.json
+          const tasksJsonPath = vscode.Uri.joinPath(workspaceRoot, '.vscode', 'tasks.json');
+          const pattern = new RegExp(`"label"\\s*:\\s*"${task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'g');
+          await openFileAtPosition(tasksJsonPath, pattern);
+        }
+      }
     })
   );
 

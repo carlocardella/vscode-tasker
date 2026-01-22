@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out",
-    "module": "commonjs"
+    "module": "commonjs",
+    "skipLibCheck": true
   },
   "include": ["src/test/**/*.ts"]
 }
