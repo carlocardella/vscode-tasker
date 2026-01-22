@@ -59,8 +59,63 @@ suite('Extension Test Suite', () => {
     });
 
     test('Is collapsible', () => {
-      const group = new TaskGroupItem('npm', []);
-      assert.strictEqual(group.collapsibleState, vscode.TreeItemCollapsibleState.Expanded, 'Should be expanded');
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub().withArgs('defaultFolderState', 'expanded').returns('expanded')
+      };
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', []);
+        assert.strictEqual(group.collapsibleState, vscode.TreeItemCollapsibleState.Expanded, 'Should be expanded');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
+
+    test('Respects defaultFolderState configuration - expanded', () => {
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub().withArgs('defaultFolderState', 'expanded').returns('expanded')
+      };
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', []);
+        assert.strictEqual(group.collapsibleState, vscode.TreeItemCollapsibleState.Expanded, 'Should be expanded when config is expanded');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
+
+    test('Respects defaultFolderState configuration - collapsed', () => {
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub().withArgs('defaultFolderState', 'expanded').returns('collapsed')
+      };
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', []);
+        assert.strictEqual(group.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed, 'Should be collapsed when config is collapsed');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
+
+    test('Respects explicit collapsible state over configuration', () => {
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub().withArgs('defaultFolderState', 'expanded').returns('collapsed')
+      };
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', [], vscode.TreeItemCollapsibleState.Expanded);
+        assert.strictEqual(group.collapsibleState, vscode.TreeItemCollapsibleState.Expanded, 'Should use explicit state over configuration');
+      } finally {
+        getConfigStub.restore();
+      }
     });
   });
 
@@ -429,6 +484,99 @@ suite('Extension Test Suite', () => {
       provider.markTaskRunning(task);
       const updatedItem = provider.getTreeItem(item);
       assert.strictEqual(updatedItem.contextValue, 'tasker.task.running', 'Should update to tasker.task.running');
+    });
+
+    test('expandAll sets all groups to expanded', async () => {
+      const provider = new TaskerProvider();
+      const npmTask = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const shellTask = new vscode.Task(
+        { type: 'shell' },
+        vscode.TaskScope.Workspace,
+        'build',
+        'shell',
+        new vscode.ShellExecution('build.sh')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([npmTask, shellTask]);
+      
+      try {
+        provider.expandAll();
+        const groups = await provider.getChildren();
+        assert.ok(groups && groups.length === 2, 'Should have 2 groups');
+        assert.ok(groups.every(g => g.collapsibleState === vscode.TreeItemCollapsibleState.Expanded), 'All groups should be expanded');
+      } finally {
+        stub.restore();
+      }
+    });
+
+    test('collapseAll sets all groups to collapsed', async () => {
+      const provider = new TaskerProvider();
+      const npmTask = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const shellTask = new vscode.Task(
+        { type: 'shell' },
+        vscode.TaskScope.Workspace,
+        'build',
+        'shell',
+        new vscode.ShellExecution('build.sh')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([npmTask, shellTask]);
+      
+      try {
+        provider.collapseAll();
+        const groups = await provider.getChildren();
+        assert.ok(groups && groups.length === 2, 'Should have 2 groups');
+        assert.ok(groups.every(g => g.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed), 'All groups should be collapsed');
+      } finally {
+        stub.restore();
+      }
+    });
+
+    test('refresh clears explicit collapsible state', async () => {
+      const provider = new TaskerProvider();
+      const npmTask = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([npmTask]);
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub().withArgs('defaultFolderState', 'expanded').returns('collapsed')
+      };
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        // First expand all
+        provider.expandAll();
+        let groups = await provider.getChildren();
+        assert.strictEqual(groups[0].collapsibleState, vscode.TreeItemCollapsibleState.Expanded, 'Should be expanded after expandAll');
+        
+        // Then refresh - should revert to config
+        provider.refresh();
+        groups = await provider.getChildren();
+        assert.strictEqual(groups[0].collapsibleState, vscode.TreeItemCollapsibleState.Collapsed, 'Should be collapsed after refresh (per config)');
+      } finally {
+        stub.restore();
+        getConfigStub.restore();
+      }
     });
   });
 });

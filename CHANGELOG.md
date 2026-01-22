@@ -2,6 +2,11 @@
 
 All notable changes to the "Task Explorer" extension will be documented in this file.
 
+## [0.0.4] - Unreleased
+
+### Fixed
+- Fixed expand button by implementing getParent method in TreeDataProvider for proper tree traversal
+
 ## [0.0.3] - 2026-01-22
 
 ### Fixed

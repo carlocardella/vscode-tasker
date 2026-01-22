@@ -5,9 +5,18 @@ type TreeNode = TaskGroupItem | TaskTreeItem;
 class TaskGroupItem extends vscode.TreeItem {
   constructor(
     public readonly taskType: string,
-    public readonly tasks: vscode.Task[]
+    public readonly tasks: vscode.Task[],
+    collapsibleState?: vscode.TreeItemCollapsibleState
   ) {
-    super(taskType, vscode.TreeItemCollapsibleState.Expanded);
+    // If collapsibleState is provided (for expand/collapse all), use it
+    // Otherwise, read from configuration
+    const state = collapsibleState !== undefined 
+      ? collapsibleState
+      : (vscode.workspace.getConfiguration('tasker').get<string>('defaultFolderState', 'expanded') === 'collapsed'
+          ? vscode.TreeItemCollapsibleState.Collapsed 
+          : vscode.TreeItemCollapsibleState.Expanded);
+    
+    super(taskType, state);
     this.contextValue = 'tasker.group';
     this.description = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
     this.iconPath = new vscode.ThemeIcon('folder');
@@ -60,9 +69,51 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private runningTasks = new Set<string>();
+  private explicitCollapsibleState?: vscode.TreeItemCollapsibleState;
+  private treeView?: vscode.TreeView<TreeNode>;
+  private lastRootItems: TaskGroupItem[] = [];
+  private parentMap = new Map<TreeNode, TaskGroupItem>();
+
+  setTreeView(treeView: vscode.TreeView<TreeNode>): void {
+    this.treeView = treeView;
+  }
+
+  getParent(element: TreeNode): TaskGroupItem | undefined {
+    return this.parentMap.get(element);
+  }
 
   refresh(): void {
+    this.explicitCollapsibleState = undefined;
     this._onDidChangeTreeData.fire();
+  }
+
+  async expandAll(): Promise<void> {
+    this.explicitCollapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    this._onDidChangeTreeData.fire();
+    // Defer to allow the view to request children and populate lastRootItems
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // If the view has not requested children yet, fetch once to seed lastRootItems
+    if (this.lastRootItems.length === 0) {
+      const roots = await this.getChildren();
+      this.lastRootItems = (roots as TaskGroupItem[]) ?? [];
+    }
+
+    // Expand all root groups via TreeView API using the same item instances the view knows about
+    if (this.treeView) {
+      for (const item of this.lastRootItems) {
+        item.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        await this.treeView.reveal(item, { expand: true });
+      }
+    }
+  }
+
+  async collapseAll(): Promise<void> {
+    this.explicitCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    this._onDidChangeTreeData.fire();
+
+    // Use built-in tree collapse command for the view
+    await vscode.commands.executeCommand('workbench.actions.treeView.taskerView.collapseAll');
   }
 
   isTaskRunning(task: vscode.Task): boolean {
@@ -111,14 +162,25 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
       // Sort groups alphabetically
       const sortedTypes = Array.from(tasksByType.keys()).sort((a, b) => a.localeCompare(b));
       
-      return sortedTypes.map(taskType => new TaskGroupItem(taskType, tasksByType.get(taskType)!));
+      const roots = sortedTypes.map(taskType => 
+        new TaskGroupItem(taskType, tasksByType.get(taskType)!, this.explicitCollapsibleState)
+      );
+      this.lastRootItems = roots;
+      return roots;
     } else if (element instanceof TaskGroupItem) {
-      // Return tasks for the group
-      return element.tasks
+      // Return tasks for the group and update parent map
+      const children = element.tasks
         .map((task: vscode.Task) => new TaskTreeItem(task, this.isTaskRunning(task)))
         .sort((a, b) => {
           return a.task.name.localeCompare(b.task.name);
         });
+      
+      // Update parent map for all children
+      for (const child of children) {
+        this.parentMap.set(child, element);
+      }
+      
+      return children;
     }
 
     return [];
@@ -127,11 +189,15 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
 
 export function activate(context: vscode.ExtensionContext): void {
   const provider = new TaskerProvider();
+  const treeView = vscode.window.createTreeView('taskerView', { treeDataProvider: provider });
+  provider.setTreeView(treeView);
   let executionMap = new Map<vscode.TaskExecution, vscode.Task>();
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('taskerView', provider),
+    treeView,
     vscode.commands.registerCommand('tasker.refresh', () => provider.refresh()),
+    vscode.commands.registerCommand('tasker.expandAll', async () => provider.expandAll()),
+    vscode.commands.registerCommand('tasker.collapseAll', async () => provider.collapseAll()),
     vscode.commands.registerCommand('tasker.runTask', async (item: TaskTreeItem) => {
       try {
         const execution = await vscode.tasks.executeTask(item.task);

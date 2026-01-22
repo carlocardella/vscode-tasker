@@ -2,7 +2,7 @@
   "name": "vscode-tasker",
   "displayName": "Tasker for VSCode",
   "description": "Run VS Code tasks quickly from a sidebar view, organized by type",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "homepage": "https://cloudnotes.io",
   "publisher": "carlocardella",
@@ -56,11 +56,39 @@
         }
       ]
     },
+    "configuration": {
+      "title": "Tasker",
+      "properties": {
+        "tasker.defaultFolderState": {
+          "type": "string",
+          "default": "collapsed",
+          "enum": [
+            "expanded",
+            "collapsed"
+          ],
+          "enumDescriptions": [
+            "Show task groups expanded by default",
+            "Show task groups collapsed by default"
+          ],
+          "description": "Controls whether task groups are expanded or collapsed when the view loads"
+        }
+      }
+    },
     "commands": [
       {
         "command": "tasker.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "tasker.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "tasker.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)"
       },
       {
         "command": "tasker.runTask",
@@ -81,9 +109,19 @@
     "menus": {
       "view/title": [
         {
+          "command": "tasker.expandAll",
+          "when": "view == taskerView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tasker.collapseAll",
+          "when": "view == taskerView",
+          "group": "navigation@2"
+        },
+        {
           "command": "tasker.refresh",
           "when": "view == taskerView",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
