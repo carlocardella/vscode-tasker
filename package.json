@@ -29,6 +29,7 @@
     "tasks",
     "automation"
   ],
+  "icon": "media/task-checklist-arrow.png",
   "main": "./dist/extension.js",
   "activationEvents": [
     "onView:taskerView",
