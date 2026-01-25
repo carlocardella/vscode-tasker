@@ -229,6 +229,20 @@ suite('Extension Test Suite', () => {
       assert.ok(iconPath && iconPath.id === 'terminal-powershell', 'powershell tasks should have terminal-powershell icon');
     });
 
+    test('Sets correct icon for process tasks (tasks.json)', () => {
+      const task = new vscode.Task(
+        { type: 'process' },
+        vscode.TaskScope.Workspace,
+        'backend',
+        'process',
+        new vscode.ProcessExecution('node app.js')
+      );
+
+      const item = new TaskTreeItem(task);
+      const iconPath = item.iconPath as vscode.ThemeIcon;
+      assert.ok(iconPath && iconPath.id === 'gear', 'process tasks should have gear icon');
+    });
+
     test('Uses fallback icon for unknown task types', () => {
       const task = new vscode.Task(
         { type: 'unknown-type' },
@@ -410,8 +424,28 @@ suite('Extension Test Suite', () => {
       try {
         const groups = await provider.getChildren();
         assert.ok(groups && groups.length === 2, 'Should have 2 groups (npm and typescript)');
-        assert.ok(groups.some(g => (g as TaskGroupItem).taskType === 'npm'), 'Should have npm group');
-        assert.ok(groups.some(g => (g as TaskGroupItem).taskType === 'typescript'), 'Should have typescript group');
+        assert.ok(groups.some(g => (g as TaskGroupItem).label === 'npm'), 'Should have npm group');
+        assert.ok(groups.some(g => (g as TaskGroupItem).label === 'typescript'), 'Should have typescript group');
+      } finally {
+        stub.restore();
+      }
+    });
+
+    test('Handles tasks defined in tasks.json (process type)', async () => {
+      const provider = new TaskerProvider();
+      const task = new vscode.Task(
+        { type: 'process' },
+        vscode.TaskScope.Workspace,
+        'custom-task',
+        'process',
+        new vscode.ProcessExecution('echo hello')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([task]);
+      
+      try {
+        const groups = await provider.getChildren();
+        assert.ok(groups.some(g => (g as TaskGroupItem).label === 'process'), 'Should contain process group');
       } finally {
         stub.restore();
       }
@@ -440,6 +474,36 @@ suite('Extension Test Suite', () => {
       const tasks = await provider.getChildren(group);
       assert.ok(tasks && tasks.length === 2, 'Should return 2 tasks for npm group');
       assert.ok(tasks.every(t => t instanceof TaskTreeItem), 'All items should be TaskTreeItems');
+    });
+
+    test('Groups tasks by name prefix (underscore)', async () => {
+      const provider = new TaskerProvider();
+      const task1 = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'TEST_bin1',
+        'npm',
+        new vscode.ShellExecution('echo 1')
+      );
+
+      const task2 = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'TEST_bin2',
+        'npm',
+        new vscode.ShellExecution('echo 2')
+      );
+
+      const group = new TaskGroupItem('npm', [task1, task2]);
+      
+      // First level should return a group named "TEST"
+      const children = await provider.getChildren(group);
+      assert.strictEqual(children.length, 1, 'Should group into one item');
+      const testGroup = children[0] as TaskGroupItem;
+      assert.ok(testGroup instanceof TaskGroupItem, 'Child should be a group');
+      assert.strictEqual(testGroup.label, 'TEST', 'Group label should be prefix');
+      assert.strictEqual(testGroup.isNameGroup, true, 'Should be marked as name group');
+      assert.strictEqual(testGroup.tasks.length, 2, 'Group should contain 2 tasks');
     });
 
     test('Returns tasks sorted by name within a group', async () => {
