@@ -506,6 +506,55 @@ suite('Extension Test Suite', () => {
       assert.strictEqual(testGroup.tasks.length, 2, 'Group should contain 2 tasks');
     });
 
+    test('Groups tasks by name prefix with custom separator', async () => {
+      const provider = new TaskerProvider();
+      const task1 = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'TEST-bin1',
+        'npm',
+        new vscode.ShellExecution('echo 1')
+      );
+
+      const task2 = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'TEST-bin2',
+        'npm',
+        new vscode.ShellExecution('echo 2')
+      );
+
+      const group = new TaskGroupItem('npm', [task1, task2]);
+      
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub()
+      };
+      configStub.get.withArgs('groupTasksByName', true).returns(true);
+      configStub.get.withArgs('groupSeparator', '_').returns('-');
+      configStub.get.withArgs('defaultFolderState', 'expanded').returns('expanded');
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+
+      try {
+        // First level should return a group named "TEST"
+        const children = await provider.getChildren(group);
+        assert.strictEqual(children.length, 1, 'Should group into one item');
+        const testGroup = children[0] as TaskGroupItem;
+        assert.ok(testGroup instanceof TaskGroupItem, 'Child should be a group');
+        assert.strictEqual(testGroup.label, 'TEST', 'Group label should be prefix');
+        assert.strictEqual(testGroup.isNameGroup, true, 'Should be marked as name group');
+        assert.strictEqual(testGroup.tasks.length, 2, 'Group should contain 2 tasks');
+
+        // Verify children of the group have prefix removed correctly using the separator
+        const groupTasks = await provider.getChildren(testGroup);
+        assert.strictEqual(groupTasks.length, 2);
+        const labels = groupTasks.map(t => t.label).sort();
+        assert.deepStrictEqual(labels, ['bin1', 'bin2']);
+      } finally {
+        getConfigStub.restore();
+      }
+    });
+
     test('Returns tasks sorted by name within a group', async () => {
       const provider = new TaskerProvider();
       const task1 = new vscode.Task(

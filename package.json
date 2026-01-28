@@ -80,7 +80,13 @@
         "tasker.groupTasksByName": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically group tasks by name prefix (e.g. 'test_unit', 'test_e2e' -> 'test' group)"
+          "description": "Automatically group tasks by name prefix using the separator defined in `tasker.groupSeparator`"
+        },
+        "tasker.groupSeparator": {
+          "type": "string",
+          "default": "_",
+          "minLength": 1,
+          "description": "Separator used for grouping tasks by name (e.g. set to '-' for 'test-unit' -> 'test' group)"
         }
       }
     },

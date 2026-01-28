@@ -180,8 +180,11 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
 
       if (element.isNameGroup) {
         // If this is already a name group (e.g. "TEST"), just list the items with stripped prefix
+        const config = vscode.workspace.getConfiguration('tasker');
+        const separator = config.get<string>('groupSeparator', '_');
+
         children = element.tasks.map(task => {
-          const prefix = (element.label as string) + '_';
+          const prefix = (element.label as string) + separator;
           const label = task.name.startsWith(prefix) ? task.name.substring(prefix.length) : task.name;
           return new TaskTreeItem(task, this.isTaskRunning(task), label);
         });
@@ -189,13 +192,14 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
         // This is a Type group (e.g. "npm"). Check for name grouping (e.g. "TEST_bin1")
         const config = vscode.workspace.getConfiguration('tasker');
         const groupByName = config.get<boolean>('groupTasksByName', true);
+        const separator = config.get<string>('groupSeparator', '_');
 
         if (groupByName) {
           const groups = new Map<string, vscode.Task[]>();
           const singles: vscode.Task[] = [];
 
           for (const task of element.tasks) {
-            const separatorIndex = task.name.indexOf('_');
+            const separatorIndex = task.name.indexOf(separator);
             if (separatorIndex > 0) {
               const prefix = task.name.substring(0, separatorIndex);
               if (!groups.has(prefix)) {
@@ -429,7 +433,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Refresh view when configuration changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude')) {
+      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator')) {
         provider.refresh();
       }
     })
