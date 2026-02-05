@@ -4,9 +4,10 @@ type TreeNode = TaskGroupItem | TaskTreeItem;
 
 class TaskGroupItem extends vscode.TreeItem {
   constructor(
-    public readonly taskType: string,
+    label: string,
     public readonly tasks: vscode.Task[],
-    collapsibleState?: vscode.TreeItemCollapsibleState
+    collapsibleState?: vscode.TreeItemCollapsibleState,
+    public readonly isNameGroup: boolean = false
   ) {
     // If collapsibleState is provided (for expand/collapse all), use it
     // Otherwise, read from configuration
@@ -16,7 +17,7 @@ class TaskGroupItem extends vscode.TreeItem {
           ? vscode.TreeItemCollapsibleState.Collapsed 
           : vscode.TreeItemCollapsibleState.Expanded);
     
-    super(taskType, state);
+    super(label, state);
     this.contextValue = 'tasker.group';
     this.description = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
     this.iconPath = new vscode.ThemeIcon('folder');
@@ -47,8 +48,8 @@ class TaskTreeItem extends vscode.TreeItem {
     'process': 'gear'
   };
 
-  constructor(public readonly task: vscode.Task, isRunning: boolean = false) {
-    super(task.name, vscode.TreeItemCollapsibleState.None);
+  constructor(public readonly task: vscode.Task, isRunning: boolean = false, label?: string) {
+    super(label || task.name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = isRunning ? 'tasker.task.running' : 'tasker.task';
     
     // Get task type and find appropriate icon
@@ -149,10 +150,17 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
         return [];
       }
 
+      // Get excluded types from configuration
+      const config = vscode.workspace.getConfiguration('tasker');
+      const excludedTypes = config.get<string[]>('exclude', []);
+
       // Group tasks by type
       const tasksByType = new Map<string, vscode.Task[]>();
       for (const task of allTasks) {
         const taskType = task.definition?.type || 'other';
+        if (excludedTypes.includes(taskType)) {
+          continue;
+        }
         if (!tasksByType.has(taskType)) {
           tasksByType.set(taskType, []);
         }
@@ -168,12 +176,58 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
       this.lastRootItems = roots;
       return roots;
     } else if (element instanceof TaskGroupItem) {
-      // Return tasks for the group and update parent map
-      const children = element.tasks
-        .map((task: vscode.Task) => new TaskTreeItem(task, this.isTaskRunning(task)))
-        .sort((a, b) => {
-          return a.task.name.localeCompare(b.task.name);
+      let children: TreeNode[] = [];
+
+      if (element.isNameGroup) {
+        // If this is already a name group (e.g. "TEST"), just list the items with stripped prefix
+        const config = vscode.workspace.getConfiguration('tasker');
+        const separator = config.get<string>('groupSeparator', '_');
+
+        children = element.tasks.map(task => {
+          const prefix = (element.label as string) + separator;
+          const label = task.name.startsWith(prefix) ? task.name.substring(prefix.length) : task.name;
+          return new TaskTreeItem(task, this.isTaskRunning(task), label);
         });
+      } else {
+        // This is a Type group (e.g. "npm"). Check for name grouping (e.g. "TEST_bin1")
+        const config = vscode.workspace.getConfiguration('tasker');
+        const groupByName = config.get<boolean>('groupTasksByName', true);
+        const separator = config.get<string>('groupSeparator', '_');
+
+        if (groupByName) {
+          const groups = new Map<string, vscode.Task[]>();
+          const singles: vscode.Task[] = [];
+
+          for (const task of element.tasks) {
+            const separatorIndex = task.name.indexOf(separator);
+            if (separatorIndex > 0) {
+              const prefix = task.name.substring(0, separatorIndex);
+              if (!groups.has(prefix)) {
+                groups.set(prefix, []);
+              }
+              groups.get(prefix)!.push(task);
+            } else {
+              singles.push(task);
+            }
+          }
+
+          const groupItems = Array.from(groups.entries()).map(([prefix, groupTasks]) => 
+            new TaskGroupItem(prefix, groupTasks, undefined, true)
+          );
+
+          const singleItems = singles.map(task => new TaskTreeItem(task, this.isTaskRunning(task)));
+          children = [...groupItems, ...singleItems];
+        } else {
+          children = element.tasks.map(task => new TaskTreeItem(task, this.isTaskRunning(task)));
+        }
+      }
+
+      // Sort children
+      children.sort((a, b) => {
+        const labelA = (a.label as string) || '';
+        const labelB = (b.label as string) || '';
+        return labelA.localeCompare(labelB);
+      });
       
       // Update parent map for all children
       for (const child of children) {
@@ -372,6 +426,15 @@ export function activate(context: vscode.ExtensionContext): void {
         if (uri.path.endsWith('refresh')) {
           provider.refresh();
         }
+      }
+    })
+  );
+
+  // Refresh view when configuration changes
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator')) {
+        provider.refresh();
       }
     })
   );
