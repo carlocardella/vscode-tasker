@@ -2,7 +2,7 @@
   "name": "vscode-tasker",
   "displayName": "Tasker for VSCode",
   "description": "Run VS Code tasks quickly from a sidebar view, organized by type",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "homepage": "https://cloudnotes.io",
   "publisher": "carlocardella",

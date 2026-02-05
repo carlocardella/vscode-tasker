@@ -2,10 +2,21 @@
 
 All notable changes to the "Task Explorer" extension will be documented in this file.
 
-## [0.0.4] - Unreleased
+## [0.0.5] - 2026-02-04
+
+### Added
+- Task grouping by name prefix with configurable separator
+- New settings: tasker.groupTasksByName, tasker.groupSeparator, tasker.exclude
+- Tests for name grouping, custom separators, and process tasks
+
+### Thanks
+- Thanks to @thomas81528262 for the PR and improvements
+
+## [0.0.4] - 2026-01-22
 
 ### Fixed
 - Fixed expand button by implementing getParent method in TreeDataProvider for proper tree traversal
+
 
 ## [0.0.3] - 2026-01-22
 
