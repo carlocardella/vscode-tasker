@@ -117,6 +117,24 @@ suite('Extension Test Suite', () => {
         getConfigStub.restore();
       }
     });
+
+    test('Uses custom icon from configuration', () => {
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub()
+      };
+      configStub.get.withArgs('defaultFolderState', 'expanded').returns('expanded');
+      configStub.get.withArgs('icons', {}).returns({ 'npm': 'archive' });
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', []);
+        const iconPath = group.iconPath as vscode.ThemeIcon;
+        assert.strictEqual(iconPath.id, 'archive', 'Should use custom icon from configuration');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
   });
 
   suite('TaskTreeItem', () => {
@@ -283,6 +301,31 @@ suite('Extension Test Suite', () => {
 
       const item = new TaskTreeItem(task);
       assert.strictEqual(item.label, 'compile', 'Item label should match task name');
+    });
+
+    test('Uses custom icon from configuration', () => {
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub()
+      };
+      configStub.get.withArgs('icons', {}).returns({ 'npm': 'beaker' });
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+
+      try {
+        const item = new TaskTreeItem(task);
+        const iconPath = item.iconPath as vscode.ThemeIcon;
+        assert.strictEqual(iconPath.id, 'beaker', 'Should use custom icon');
+      } finally {
+        getConfigStub.restore();
+      }
     });
   });
 
@@ -533,6 +576,7 @@ suite('Extension Test Suite', () => {
       configStub.get.withArgs('groupTasksByName', true).returns(true);
       configStub.get.withArgs('groupSeparator', '_').returns('-');
       configStub.get.withArgs('defaultFolderState', 'expanded').returns('expanded');
+      configStub.get.withArgs('icons', {}).returns({});
       getConfigStub.withArgs('tasker').returns(configStub as any);
 
       try {

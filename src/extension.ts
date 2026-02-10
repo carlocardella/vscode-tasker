@@ -20,7 +20,15 @@ class TaskGroupItem extends vscode.TreeItem {
     super(label, state);
     this.contextValue = 'tasker.group';
     this.description = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
-    this.iconPath = new vscode.ThemeIcon('folder');
+
+    const config = vscode.workspace.getConfiguration('tasker');
+    const customIcons = config.get<Record<string, string>>('icons', {});
+    const iconName = customIcons[label] || 'folder';
+    try {
+      this.iconPath = new vscode.ThemeIcon(iconName);
+    } catch (error) {
+      this.iconPath = new vscode.ThemeIcon('folder');
+    }
   }
 }
 
@@ -54,7 +62,10 @@ class TaskTreeItem extends vscode.TreeItem {
     
     // Get task type and find appropriate icon
     const taskType = task.definition?.type || 'other';
-    const iconName = TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'package';
+
+    const config = vscode.workspace.getConfiguration('tasker');
+    const customIcons = config.get<Record<string, string>>('icons', {});
+    const iconName = customIcons[taskType] || TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'package';
     try {
       this.iconPath = new vscode.ThemeIcon(iconName);
     } catch (error) {
@@ -433,7 +444,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Refresh view when configuration changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator')) {
+      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator') || e.affectsConfiguration('tasker.icons')) {
         provider.refresh();
       }
     })
