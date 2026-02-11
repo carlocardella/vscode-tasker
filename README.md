@@ -45,6 +45,26 @@ npm run compile
 
 3) Launch the Extension Host (F5) using the provided launch config.
 
+## Configuration
+
+### Custom Icons
+You can customize icons for specific task types or groups using the `tasker.icons` setting. Map the task type (e.g., `npm`, `shell`) or group name to a valid Codicon ID.
+
+Example configuration in `settings.json`:
+```json
+"tasker.icons": {
+  "npm": "beaker",
+  "shell": "terminal-bash",
+  "build": "tools"
+}
+```
+
+### Other Settings
+- `tasker.groupTasksByName`: Group tasks by name prefix (default: `true`).
+- `tasker.groupSeparator`: Separator for task grouping (default: `_`).
+- `tasker.defaultFolderState`: Default state for task groups (`expanded` or `collapsed`).
+- `tasker.exclude`: List of task types to exclude.
+
 ## Commands & Views
 - View: Task Explorer (Activity Bar)
 - Commands:
