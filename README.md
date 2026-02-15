@@ -28,6 +28,7 @@ Task Explorer is a VS Code extension that surfaces your defined tasks in a dedic
 - Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
 - Inline hover actions on each task: run/stop (state-aware) and edit (opens tasks.json)
 - Command palette actions to refresh the list and run/stop/edit a task
+- Last Execution Time: Hover over any task to see exactly when it was last run in the tooltip
 - Bundled with webpack for fast activation and small packages
 
 ## Getting Started
@@ -44,6 +45,26 @@ npm run compile
 ```
 
 3) Launch the Extension Host (F5) using the provided launch config.
+
+## Configuration
+
+### Custom Icons
+You can customize icons for specific task types or groups using the `tasker.icons` setting. Map the task type (e.g., `npm`, `shell`) or group name to a valid Codicon ID. You can find the list of available icons [here](https://code.visualstudio.com/api/references/icons-in-labels).
+
+Example configuration in `settings.json`:
+```json
+"tasker.icons": {
+  "npm": "beaker",
+  "shell": "terminal-bash",
+  "build": "tools"
+}
+```
+
+### Other Settings
+- `tasker.groupTasksByName`: Group tasks by name prefix (default: `true`).
+- `tasker.groupSeparator`: Separator for task grouping (default: `_`).
+- `tasker.defaultFolderState`: Default state for task groups (`expanded` or `collapsed`).
+- `tasker.exclude`: List of task types to exclude.
 
 ## Commands & Views
 - View: Task Explorer (Activity Bar)

@@ -117,6 +117,24 @@ suite('Extension Test Suite', () => {
         getConfigStub.restore();
       }
     });
+
+    test('Uses custom icon from configuration', () => {
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub()
+      };
+      configStub.get.withArgs('defaultFolderState', 'expanded').returns('expanded');
+      configStub.get.withArgs('icons', {}).returns({ 'npm': 'archive' });
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+      
+      try {
+        const group = new TaskGroupItem('npm', []);
+        const iconPath = group.iconPath as vscode.ThemeIcon;
+        assert.strictEqual(iconPath.id, 'archive', 'Should use custom icon from configuration');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
   });
 
   suite('TaskTreeItem', () => {
@@ -283,6 +301,47 @@ suite('Extension Test Suite', () => {
 
       const item = new TaskTreeItem(task);
       assert.strictEqual(item.label, 'compile', 'Item label should match task name');
+    });
+
+    test('Uses custom icon from configuration', () => {
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const getConfigStub = sinon.stub(vscode.workspace, 'getConfiguration');
+      const configStub = {
+        get: sinon.stub()
+      };
+      configStub.get.withArgs('icons', {}).returns({ 'npm': 'beaker' });
+      getConfigStub.withArgs('tasker').returns(configStub as any);
+
+      try {
+        const item = new TaskTreeItem(task);
+        const iconPath = item.iconPath as vscode.ThemeIcon;
+        assert.strictEqual(iconPath.id, 'beaker', 'Should use custom icon');
+      } finally {
+        getConfigStub.restore();
+      }
+    });
+
+    test('Tooltip includes last execution time when provided', () => {
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const now = new Date();
+      const item = new TaskTreeItem(task, false, undefined, now);
+      
+      assert.ok((item.tooltip as string).includes('Last executed'), 'Tooltip should contain "Last executed"');
+      assert.ok((item.tooltip as string).includes(now.toLocaleString()), 'Tooltip should contain the formatted date');
     });
   });
 
@@ -533,6 +592,7 @@ suite('Extension Test Suite', () => {
       configStub.get.withArgs('groupTasksByName', true).returns(true);
       configStub.get.withArgs('groupSeparator', '_').returns('-');
       configStub.get.withArgs('defaultFolderState', 'expanded').returns('expanded');
+      configStub.get.withArgs('icons', {}).returns({});
       getConfigStub.withArgs('tasker').returns(configStub as any);
 
       try {
@@ -689,6 +749,33 @@ suite('Extension Test Suite', () => {
       } finally {
         stub.restore();
         getConfigStub.restore();
+      }
+    });
+
+    test('Updates last execution time when task starts', async () => {
+      const provider = new TaskerProvider();
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([task]);
+      
+      try {
+        // Run task to set execution time
+        provider.markTaskRunning(task);
+        
+        // Verify the time is propagated to the tree item
+        const groups = await provider.getChildren();
+        const children = await provider.getChildren(groups[0]);
+        const item = children[0] as TaskTreeItem;
+        
+        assert.ok((item.tooltip as string).includes('Last executed'), 'Tooltip should include execution time after running');
+      } finally {
+        stub.restore();
       }
     });
   });
