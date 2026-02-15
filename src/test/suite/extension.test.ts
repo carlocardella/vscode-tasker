@@ -327,6 +327,22 @@ suite('Extension Test Suite', () => {
         getConfigStub.restore();
       }
     });
+
+    test('Tooltip includes last execution time when provided', () => {
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const now = new Date();
+      const item = new TaskTreeItem(task, false, undefined, now);
+      
+      assert.ok((item.tooltip as string).includes('Last executed'), 'Tooltip should contain "Last executed"');
+      assert.ok((item.tooltip as string).includes(now.toLocaleString()), 'Tooltip should contain the formatted date');
+    });
   });
 
   suite('TaskerProvider', () => {
@@ -733,6 +749,33 @@ suite('Extension Test Suite', () => {
       } finally {
         stub.restore();
         getConfigStub.restore();
+      }
+    });
+
+    test('Updates last execution time when task starts', async () => {
+      const provider = new TaskerProvider();
+      const task = new vscode.Task(
+        { type: 'npm' },
+        vscode.TaskScope.Workspace,
+        'test',
+        'npm',
+        new vscode.ShellExecution('npm test')
+      );
+
+      const stub = sinon.stub(vscode.tasks, 'fetchTasks').resolves([task]);
+      
+      try {
+        // Run task to set execution time
+        provider.markTaskRunning(task);
+        
+        // Verify the time is propagated to the tree item
+        const groups = await provider.getChildren();
+        const children = await provider.getChildren(groups[0]);
+        const item = children[0] as TaskTreeItem;
+        
+        assert.ok((item.tooltip as string).includes('Last executed'), 'Tooltip should include execution time after running');
+      } finally {
+        stub.restore();
       }
     });
   });
