@@ -20,7 +20,15 @@ class TaskGroupItem extends vscode.TreeItem {
     super(label, state);
     this.contextValue = 'tasker.group';
     this.description = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
-    this.iconPath = new vscode.ThemeIcon('folder');
+
+    const config = vscode.workspace.getConfiguration('tasker');
+    const customIcons = config.get<Record<string, string>>('icons', {});
+    const iconName = customIcons[label] || 'folder';
+    try {
+      this.iconPath = new vscode.ThemeIcon(iconName);
+    } catch (error) {
+      this.iconPath = new vscode.ThemeIcon('folder');
+    }
   }
 }
 
@@ -48,13 +56,16 @@ class TaskTreeItem extends vscode.TreeItem {
     'process': 'gear'
   };
 
-  constructor(public readonly task: vscode.Task, isRunning: boolean = false, label?: string) {
+  constructor(public readonly task: vscode.Task, isRunning: boolean = false, label?: string, lastExecution?: Date) {
     super(label || task.name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = isRunning ? 'tasker.task.running' : 'tasker.task';
     
     // Get task type and find appropriate icon
     const taskType = task.definition?.type || 'other';
-    const iconName = TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'package';
+
+    const config = vscode.workspace.getConfiguration('tasker');
+    const customIcons = config.get<Record<string, string>>('icons', {});
+    const iconName = customIcons[taskType] || TaskTreeItem.TASK_TYPE_ICONS[taskType] || 'package';
     try {
       this.iconPath = new vscode.ThemeIcon(iconName);
     } catch (error) {
@@ -62,7 +73,7 @@ class TaskTreeItem extends vscode.TreeItem {
       this.iconPath = new vscode.ThemeIcon('package');
     }
     
-    this.tooltip = task.name;
+    this.tooltip = lastExecution ? `${task.name}\nLast executed: ${lastExecution.toLocaleString()}` : task.name;
   }
 }
 
@@ -70,6 +81,7 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private runningTasks = new Set<string>();
+  private lastExecutionTimes = new Map<string, Date>();
   private explicitCollapsibleState?: vscode.TreeItemCollapsibleState;
   private treeView?: vscode.TreeView<TreeNode>;
   private lastRootItems: TaskGroupItem[] = [];
@@ -122,7 +134,9 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
   }
 
   markTaskRunning(task: vscode.Task): void {
-    this.runningTasks.add(this.getTaskId(task));
+    const taskId = this.getTaskId(task);
+    this.runningTasks.add(taskId);
+    this.lastExecutionTimes.set(taskId, new Date());
     this._onDidChangeTreeData.fire();
   }
 
@@ -186,7 +200,7 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
         children = element.tasks.map(task => {
           const prefix = (element.label as string) + separator;
           const label = task.name.startsWith(prefix) ? task.name.substring(prefix.length) : task.name;
-          return new TaskTreeItem(task, this.isTaskRunning(task), label);
+          return new TaskTreeItem(task, this.isTaskRunning(task), label, this.lastExecutionTimes.get(this.getTaskId(task)));
         });
       } else {
         // This is a Type group (e.g. "npm"). Check for name grouping (e.g. "TEST_bin1")
@@ -215,10 +229,10 @@ class TaskerProvider implements vscode.TreeDataProvider<TreeNode> {
             new TaskGroupItem(prefix, groupTasks, undefined, true)
           );
 
-          const singleItems = singles.map(task => new TaskTreeItem(task, this.isTaskRunning(task)));
+          const singleItems = singles.map(task => new TaskTreeItem(task, this.isTaskRunning(task), undefined, this.lastExecutionTimes.get(this.getTaskId(task))));
           children = [...groupItems, ...singleItems];
         } else {
-          children = element.tasks.map(task => new TaskTreeItem(task, this.isTaskRunning(task)));
+          children = element.tasks.map(task => new TaskTreeItem(task, this.isTaskRunning(task), undefined, this.lastExecutionTimes.get(this.getTaskId(task))));
         }
       }
 
@@ -433,7 +447,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Refresh view when configuration changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator')) {
+      if (e.affectsConfiguration('tasker.groupTasksByName') || e.affectsConfiguration('tasker.exclude') || e.affectsConfiguration('tasker.groupSeparator') || e.affectsConfiguration('tasker.icons')) {
         provider.refresh();
       }
     })
