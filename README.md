@@ -24,6 +24,11 @@ Task Explorer is a VS Code extension that surfaces your defined tasks in a dedic
 <br>
 <br>
 
+## What's New in 0.0.6
+- Configurable custom icons for task types and name groups via `tasker.icons`
+- Task tooltip now shows the last execution timestamp after a run
+- Documentation refreshed for configuration options and examples
+
 ## Features
 - Sidebar view showing available VS Code tasks grouped by type (npm, shell, PowerShell, etc.)
 - Inline hover actions on each task: run/stop (state-aware) and edit (opens tasks.json)

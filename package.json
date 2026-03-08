@@ -2,7 +2,7 @@
   "name": "vscode-tasker",
   "displayName": "Tasker for VSCode",
   "description": "Run VS Code tasks quickly from a sidebar view, organized by type",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "homepage": "https://cloudnotes.io",
   "publisher": "carlocardella",
@@ -76,6 +76,14 @@
           "type": "array",
           "default": [],
           "description": "List of task types to exclude from the view (e.g. ['typescript', 'docker'])"
+        },
+        "tasker.icons": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map of task type or group name to a Codicon ID (e.g. {\"npm\": \"package\", \"build\": \"tools\"})"
         },
         "tasker.groupTasksByName": {
           "type": "boolean",

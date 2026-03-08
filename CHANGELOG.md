@@ -2,6 +2,20 @@
 
 All notable changes to the "Task Explorer" extension will be documented in this file.
 
+## [0.0.6] - 2026-03-08
+
+### Added
+- Configurable task and group icons via `tasker.icons`
+- Last execution timestamp in task tooltips (`Last executed: ...`)
+- Thanks @thomas81528262 for the PR
+
+### Changed
+- README expanded with configuration docs and examples for custom icons and grouping settings
+
+### Fixed
+- Dependency updates for `qs` and `minimatch`
+- Test suite expanded to cover custom icons and last execution tooltip behavior
+
 ## [0.0.5] - 2026-02-04
 
 ### Added
